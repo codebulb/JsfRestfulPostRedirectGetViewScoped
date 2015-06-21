@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:o="http://omnifaces.org/ui">
+    <h:head>
+        <title>#{empty customerController.currentEntity.id ? 'Create' : 'Edit'} Customer</title>
+        <h:outputScript library="js" name="jquery-2.1.4.min.js" />
+    </h:head>
+    <h:body>
+        <f:metadata>
+            <f:viewParam name="anchor" value="null"/>
+            <f:viewParam name="id" value="#{customerController.currentEntityId}"/>
+            <f:event type="postValidate" listener="#{customerController.postValidate}"/>
+            <f:viewAction action="#{customerController.initCurrentEntity}"/>
+        </f:metadata>
+        <o:importFunctions type="ch.codebulb.jsfrestfulprgviewscoped.model.EmploymentStatus"/>
+        
+        <f:view>
+            <o:form id="form" includeRequestParams="true">
+                <h1>#{empty customerController.currentEntity.id ? 'Create' : 'Edit'} Customer</h1>
+                <h:messages/>
+                
+                <h:panelGrid columns="2">
+                    <h:outputLabel value="Id:" for="id"
+                                   rendered="#{not empty customerController.currentEntity.id}"/>
+                    <h:outputText id="id" value="#{customerController.currentEntity.id}" title="Id"
+                                  rendered="#{not empty customerController.currentEntity.id}"/>
+                    <h:outputLabel value="Name: *" for="name" />
+                    <h:inputText id="name" value="#{customerController.currentEntity.name}" title="Name" required="true"/>
+                    <h:outputLabel value="Address:" for="address" />
+                    <h:inputText id="address" value="#{customerController.currentEntity.address}" title="Address" />
+                    <h:outputLabel value="City:" for="city" />
+                    <h:inputText id="city" value="#{customerController.currentEntity.city}" title="City" />
+                    <h:outputLabel value="Employment status:" for="employmentStatus" />
+                    <h:selectOneMenu id="employmentStatus" value="#{customerController.currentEntity.employmentStatus}" title="Employment status"
+                                     converter="omnifaces.GenericEnumConverter">
+                        <f:selectItems value="#{EmploymentStatus:values()}"/>
+                        <f:ajax event="change" execute="@form" render="@form" listener="#{customerController.employmentStatusChanged}"/>
+                    </h:selectOneMenu>
+                    <h:outputLabel id="companyNameLabel" value="Company name:" for="companyName" 
+                                   rendered="#{customerController.currentEntity.employmentStatus != 'Unemployed'}"/>
+                    <h:inputText id="companyName" value="#{customerController.currentEntity.companyName}" title="Company name:" 
+                                 rendered="#{customerController.currentEntity.employmentStatus != 'Unemployed'}"/>
+                </h:panelGrid>
+                <h:commandButton value="Save" action="#{customerController.save(customerController.currentEntity)}"/>
+                <h:commandButton value="Delete" action="#{customerController.delete(customerController.currentEntity.id)}" immediate="true"
+                                 rendered="#{not empty customerController.currentEntity.id}"/>
+                <h:button value="Reset" outcome="edit.xhtml">
+                    <f:param name="id" value="#{customerController.currentEntity.id}" disable="#{empty customerController.currentEntity.id}"/>
+                </h:button>
+                <h:button value="Cancel" outcome="list.xhtml"/>
+
+                <h:panelGroup rendered="#{not empty customerController.currentEntity.id}">
+                    <h2><a name="payments">Payment List</a></h2>
+                    <h:button outcome="/pages/payments/edit.xhtml" value="Add">
+                        <f:param name="customer" value="#{customerController.currentEntity.id}"/>
+                    </h:button>
+                    <h:dataTable value="#{customerController.currentEntity.payments}" var="item">
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Id"/>
+                            </f:facet>
+                            <h:link value="#{item.id}" outcome="/pages/payments/edit.xhtml">
+                                <f:param name="customer" value="#{customerController.currentEntity.id}"/>
+                                <f:param name="id" value="#{item.id}"/>
+                            </h:link>
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Amount"/>
+                            </f:facet>
+                            <h:outputText value="#{item.amount}"/>
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Date"/>
+                            </f:facet>
+                            <h:outputText value="#{item.date}">
+                                <f:convertDateTime pattern="MM/dd/yyyy" />
+                            </h:outputText>
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Delete"/>
+                            </f:facet>
+                            <h:commandLink action="#{paymentController.delete}" value="X">
+                                <f:param name="deleteId" value="#{item.id}"/>
+                                <f:param name="customer" value="#{customerController.currentEntity.id}"/>
+                            </h:commandLink>
+                        </h:column>
+                    </h:dataTable>
+                </h:panelGroup>
+            </o:form>
+        </f:view>
+
+    </h:body>
+</html>
+
